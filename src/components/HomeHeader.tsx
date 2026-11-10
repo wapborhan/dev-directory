@@ -1,28 +1,50 @@
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Compass, Radar, Sun, Moon, Heart } from "lucide-react";
+import { useFavorites } from "@/hooks/useFavorites";
+
 const HomeHeader = () => {
+  const location = useLocation();
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== "undefined") {
+      return (
+        localStorage.getItem("dev_theme") === "dark" ||
+        document.documentElement.classList.contains("dark") ||
+        true // default to dark in this stylish theme
+      );
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("dev_theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("dev_theme", "light");
+    }
+  }, [isDark]);
+
+  const toggleTheme = () => {
+    setIsDark((prev) => !prev);
+  };
+
+  const isHome = location.pathname === "/";
+  const isSearch = location.pathname === "/search";
+  const isFavorites = location.pathname === "/favorites";
+  const { favoritesCount } = useFavorites();
+
   return (
     <header className="fixed left-0 right-0 top-0 z-50 border-b border-border/70 bg-background/78 backdrop-blur-xl">
       <div className="pointer-events-none absolute inset-0 atmosphere-grid opacity-15" />
       <div className="pointer-events-none absolute inset-0 texture-noise" />
       <div className="relative mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-4 sm:px-6">
-        <a className="group flex items-center gap-3" href="/">
+        <Link className="group flex items-center gap-3" to="/">
           <div className="radar-ring relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-border/70 bg-secondary/55">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-accent/30 to-transparent scanline" />
             <div style={{ transform: "scale(1.01908) rotate(7.98883deg)" }}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width={24}
-                height={24}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-compass h-5 w-5 text-accent transition-transform duration-300 group-hover:rotate-45"
-              >
-                <path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" />
-                <circle cx={12} cy={12} r={10} />
-              </svg>
+              <Compass className="h-5 w-5 text-accent transition-transform duration-300 group-hover:rotate-45" />
             </div>
           </div>
           <div>
@@ -34,42 +56,60 @@ const HomeHeader = () => {
               Talent Signal Engine
             </p>
           </div>
-        </a>
+        </Link>
+
         <nav className="flex items-center gap-2" aria-label="Primary">
-          <a
-            className="inline-flex h-10 items-center rounded-full px-4 text-sm font-semibold transition-all bg-primary text-primary-foreground glow-amber"
-            aria-current="page"
-            href="/"
+          <Link
+            className={`inline-flex h-10 items-center rounded-full px-4 text-sm font-semibold transition-all ${
+              isHome
+                ? "bg-primary text-primary-foreground glow-amber"
+                : "text-muted-foreground hover:bg-secondary/75 hover:text-foreground"
+            }`}
+            aria-current={isHome ? "page" : undefined}
+            to="/"
           >
             Home
-          </a>
-          <a
-            className="inline-flex h-10 items-center rounded-full px-4 text-sm font-semibold transition-all text-muted-foreground hover:bg-secondary/75 hover:text-foreground"
-            href="/search"
+          </Link>
+
+          <Link
+            className={`inline-flex h-10 items-center rounded-full px-4 text-sm font-semibold transition-all ${
+              isSearch
+                ? "bg-primary text-primary-foreground glow-amber"
+                : "text-muted-foreground hover:bg-secondary/75 hover:text-foreground"
+            }`}
+            aria-current={isSearch ? "page" : undefined}
+            to="/search"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width={24}
-              height={24}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-radar mr-1.5 h-4 w-4"
-            >
-              <path d="M19.07 4.93A10 10 0 0 0 6.99 3.34" />
-              <path d="M4 6h.01" />
-              <path d="M2.29 9.62A10 10 0 1 0 21.31 8.35" />
-              <path d="M16.24 7.76A6 6 0 1 0 8.23 16.67" />
-              <path d="M12 18h.01" />
-              <path d="M17.99 11.66A6 6 0 0 1 15.77 16.67" />
-              <circle cx={12} cy={12} r={2} />
-              <path d="m13.41 10.59 5.66-5.66" />
-            </svg>
+            <Radar className="mr-1.5 h-4 w-4" />
             Search
-          </a>
+          </Link>
+
+          <Link
+            className={`inline-flex h-10 items-center rounded-full px-4 text-sm font-semibold transition-all ${
+              isFavorites
+                ? "bg-primary text-primary-foreground glow-amber"
+                : "text-muted-foreground hover:bg-secondary/75 hover:text-foreground"
+            }`}
+            aria-current={isFavorites ? "page" : undefined}
+            to="/favorites"
+          >
+            <Heart
+              className={`mr-1.5 h-4 w-4 ${favoritesCount > 0 ? "fill-current" : ""}`}
+            />
+            <span>Favorites</span>
+            {favoritesCount > 0 && (
+              <span
+                className={`ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${
+                  isFavorites
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-primary/20 text-primary"
+                }`}
+              >
+                {favoritesCount}
+              </span>
+            )}
+          </Link>
+
           <a
             href="https://docs.github.com/en/rest"
             target="_blank"
@@ -93,33 +133,19 @@ const HomeHeader = () => {
             </svg>
             API
           </a>
+
           <button
+            type="button"
+            onClick={toggleTheme}
             className="ml-1 inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-card/55 text-muted-foreground transition hover:border-primary/60 hover:text-foreground"
-            title="Switch to light mode"
-            aria-label="Switch to light mode"
+            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width={24}
-              height={24}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-sun h-4 w-4"
-            >
-              <circle cx={12} cy={12} r={4} />
-              <path d="M12 2v2" />
-              <path d="M12 20v2" />
-              <path d="m4.93 4.93 1.41 1.41" />
-              <path d="m17.66 17.66 1.41 1.41" />
-              <path d="M2 12h2" />
-              <path d="M20 12h2" />
-              <path d="m6.34 17.66-1.41 1.41" />
-              <path d="m19.07 4.93-1.41 1.41" />
-            </svg>
+            {isDark ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
           </button>
         </nav>
       </div>
